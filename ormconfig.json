@@ -7,6 +7,7 @@
   "database": "gostack_desafio09",
   "entities": ["./src/modules/**/infra/typeorm/entities/*.ts"],
   "migrations": ["./src/shared/infra/typeorm/migrations/*.ts"],
+  "bigNumberStrings": true,
   "cli": {
     "migrationsDir": "./src/shared/infra/typeorm/migrations"
   }

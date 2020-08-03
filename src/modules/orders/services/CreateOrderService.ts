@@ -20,13 +20,60 @@ interface IRequest {
 @injectable()
 class CreateOrderService {
   constructor(
+    @inject('OrdersRepository')
     private ordersRepository: IOrdersRepository,
+
+    @inject('ProductsRepository')
     private productsRepository: IProductsRepository,
+
+    @inject('CustomersRepository')
     private customersRepository: ICustomersRepository,
   ) {}
 
   public async execute({ customer_id, products }: IRequest): Promise<Order> {
-    // TODO
+    const customer = await this.customersRepository.findById(customer_id);
+
+    if (!customer) {
+      throw new AppError('Customer does not exist.');
+    }
+
+    const productsId = Array.from(products, product => {
+      return { id: product.id };
+    });
+
+    const productsFound = await this.productsRepository.findAllById(productsId);
+
+    if (productsFound.length !== products.length) {
+      throw new AppError('Cannot create order with invalid products.');
+    }
+
+    const productsQuantityUpdate: IProduct[] = [];
+
+    const productsArray = products.map((product, index) => {
+      productsQuantityUpdate.push({
+        quantity: productsFound[index].quantity - product.quantity,
+        id: product.id,
+      });
+
+      if (product.quantity > productsFound[index].quantity) {
+        throw new AppError('Products with insufficient quantities.');
+      }
+
+      return {
+        product_id: product.id,
+        price: productsFound[index].price,
+        quantity: product.quantity,
+      };
+    });
+
+    await this.productsRepository.updateQuantity(productsQuantityUpdate);
+
+    const order = await this.ordersRepository.create({
+      customer,
+      products: productsArray,
+    });
+
+    return order;
   }
 }
 
