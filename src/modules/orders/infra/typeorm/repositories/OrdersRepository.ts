@@ -51,13 +51,6 @@ class OrdersRepository implements IOrdersRepository {
       return undefined;
     }
 
-    const findOrdersProduct = await this.ordersProductsRepository.find({
-      where: { order_id: findOrder.id },
-      relations: ['product'],
-    });
-
-    findOrder.order_products = findOrdersProduct;
-
     return findOrder;
   }
 }
